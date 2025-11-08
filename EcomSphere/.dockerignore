@@ -1,0 +1,14 @@
+# Gradle
+.gradle
+build
+
+# IDEs
+.idea
+*.iml
+.vscode
+
+# OS
+.DS_Store
+
+# Env files (keep secrets out of images)
+.env
