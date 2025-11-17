@@ -1,5 +1,6 @@
-package com.example.EcomSphere
+package com.example.EcomSphere.MiddleWare
 
+import com.example.EcomSphere.Helper.CustomUserPrincipal
 import com.example.EcomSphere.Services.UserService.UserRepository
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
@@ -35,9 +36,17 @@ class JwtAuthFilter(
                     // If you store roles, map them here; else give a default role
                     val authorities = listOf(SimpleGrantedAuthority("ROLE_USER"))
 
+                    //Because userRepository.findByEmail(email) return Optional<User> so can not take the id or email directly there
+                    val user = userOpt.get()
+
+                    val principal = CustomUserPrincipal(
+                        id = user.id!!,
+                        email = user.email
+                    )
+
                     // Creates and authentication object recognized by Spring Security
                     val auth = UsernamePasswordAuthenticationToken(
-                        /* principal = */ email,
+                        /* principal = */ principal,
                         /* credentials = */ null,
                         /* authorities = */ authorities
                     ).apply {
