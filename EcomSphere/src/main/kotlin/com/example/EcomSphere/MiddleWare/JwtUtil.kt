@@ -1,4 +1,4 @@
-package com.example.EcomSphere
+package com.example.EcomSphere.MiddleWare
 
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys

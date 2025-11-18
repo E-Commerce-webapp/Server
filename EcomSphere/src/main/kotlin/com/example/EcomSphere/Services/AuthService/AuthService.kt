@@ -1,9 +1,9 @@
 package com.example.EcomSphere.Services.AuthService
 
-import com.example.EcomSphere.JwtUtil
+import com.example.EcomSphere.Helper.ForbiddenActionException
+import com.example.EcomSphere.MiddleWare.JwtUtil
 import com.example.EcomSphere.Services.UserService.User
 import com.example.EcomSphere.Services.UserService.UserRepository
-import io.netty.handler.codec.http.HttpResponse
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Service
 
@@ -16,7 +16,7 @@ class AuthService(
 
     fun register(req: RegisterRequest) {
         val email = req.email.lowercase()
-        if (repo.existsByEmail(email)) throw IllegalArgumentException("Email already in use")
+        if (repo.existsByEmail(email)) throw ForbiddenActionException("Email already in use")
         val saved = repo.save(
             User(
                 email = email,
@@ -28,9 +28,9 @@ class AuthService(
 
     fun login(req: LoginRequest): AuthResponse {
         val user = repo.findByEmail(req.email.lowercase())
-            .orElseThrow { IllegalArgumentException("Invalid credentials") }
+            .orElseThrow { ForbiddenActionException("Invalid credentials") }
         if (!bcrypt.matches(req.password, user.passwordHash)) {
-            throw IllegalArgumentException("Invalid credentials")
+            throw ForbiddenActionException("Invalid credentials")
         }
         return AuthResponse(jwt.generate(user.email))
     }
