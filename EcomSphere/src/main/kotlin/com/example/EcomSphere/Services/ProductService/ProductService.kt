@@ -19,12 +19,19 @@ class ProductService(
             price = this.price,
             stock = this.stock,
             images = listOf(this.images),
-            sellerId = this.sellerId
+            sellerId = this.sellerId,
+            category = this.category
         )
 
     fun getAllProductsExternal(): List<GetAllProductsResponse> {
         val response = webClientConfig.webClient().get()
-            .uri(baseUrl)
+            .uri{ uriBuilder ->
+                uriBuilder
+                    .path("/products")
+                    .queryParam("limit", 120)
+                    .queryParam("skip", 0)
+                    .build()
+            }
             .retrieve()
             .bodyToMono(ProductsApiResponse::class.java)
             .block()
@@ -42,7 +49,8 @@ class ProductService(
                 description = product.description,
                 price = product.price,
                 stock = product.stock,
-                images = listOf(product.images)
+                images = listOf(product.images),
+                category = product.category
             )
         }
     }
@@ -72,7 +80,8 @@ class ProductService(
                 description = request.description ?: existing.description,
                 price = request.price ?: existing.price,
                 stock = request.stock ?: existing.stock,
-                images = request.images ?: existing.images
+                images = request.images ?: existing.images,
+                category = request.category ?: existing.category
             )
 
             val saved = productRepository.save(updated)
