@@ -21,4 +21,19 @@ class GlobalExceptionHandler {
             .status(HttpStatus.BAD_REQUEST)
             .body(mapOf("error" to e.message!!))
     }
+
+    @ExceptionHandler(EmailAlreadyVerifiedException::class)
+    fun handleEmailAlreadyVerified(ex: EmailAlreadyVerifiedException): ResponseEntity<String> {
+        return ResponseEntity.badRequest().body(ex.message)
+    }
+
+    @ExceptionHandler(AlreadyASellerException::class)
+    fun handleAlreadyASeller(ex: AlreadyASellerException): ResponseEntity<String> {
+        return ResponseEntity.badRequest().body(ex.message)
+    }
+
+    @ExceptionHandler(Exception::class)
+    fun handleGeneral(ex: Exception): ResponseEntity<String> {
+        return ResponseEntity.status(500).body(ex.message)
+    }
 }

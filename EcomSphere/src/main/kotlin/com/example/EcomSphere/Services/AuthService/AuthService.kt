@@ -10,18 +10,20 @@ import org.springframework.stereotype.Service
 @Service
 class AuthService(
     private val repo: UserRepository,
-    private val jwt: JwtUtil
+    private val jwt: JwtUtil,
 ) {
     private val bcrypt = BCryptPasswordEncoder()
 
     fun register(req: RegisterRequest) {
         val email = req.email.lowercase()
         if (repo.existsByEmail(email)) throw ForbiddenActionException("Email already in use")
-        val saved = repo.save(
+        repo.save(
             User(
                 email = email,
                 name = req.name,
-                passwordHash = bcrypt.encode(req.password)
+                passwordHash = bcrypt.encode(req.password),
+                isASeller = false,
+                emailConfirm = false
             )
         )
     }
@@ -34,4 +36,14 @@ class AuthService(
         }
         return AuthResponse(jwt.generate(user.email))
     }
+
+    fun verifyEmail(email: String) {
+        val user = repo.findByEmail(email.lowercase())
+            .orElseThrow { ForbiddenActionException("Invalid credential") }
+
+        user.isASeller = true
+        user.emailConfirm = true
+        repo.save(user)
+    }
+
 }

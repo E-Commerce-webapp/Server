@@ -28,6 +28,7 @@ class SecurityConfig(
                 it
                     .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                     .requestMatchers("/auth/**").permitAll()
+                    .requestMatchers("/users/become-seller").permitAll()
                     .anyRequest().authenticated()
             }
             .httpBasic { it.disable() }
