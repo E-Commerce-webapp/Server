@@ -7,9 +7,11 @@ import org.springframework.data.mongodb.core.mapping.Document
 @Document("users")
 data class User(
     @Id val id: String? = null,
-    @Indexed(unique = true) val email: String,
-    var name: String,
+    @Indexed(unique = true) var email: String,
+    var lastName: String,
     var passwordHash: String,
     var isASeller: Boolean? = null,
-    var emailConfirm: Boolean? = null
+    var emailConfirm: Boolean? = null,
+    var address: String,
+    var firstName: String
 )

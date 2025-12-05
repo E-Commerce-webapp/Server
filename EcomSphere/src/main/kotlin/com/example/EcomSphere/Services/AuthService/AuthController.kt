@@ -33,4 +33,10 @@ class AuthController(
         return ResponseEntity.ok("Email verified successfully.")
     }
 
+    @GetMapping("/check-email/{email}")
+    fun checkEmail(@PathVariable email: String): ResponseEntity<Map<String, Boolean>> {
+        val exists = auth.checkEmail(email)
+        return ResponseEntity.ok(mapOf("exists" to exists))
+    }
+
 }
