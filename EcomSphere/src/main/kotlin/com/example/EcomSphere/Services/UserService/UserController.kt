@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.core.Authentication
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 
 @Controller
@@ -32,5 +33,11 @@ class UserController(
         emailService.sendVerificationEmail(email, token)
 
         return ResponseEntity.ok("Verification email sent.")
+    }
+
+    @GetMapping("/{email}")
+    fun findUserByEmail(@PathVariable email: String): ResponseEntity<GetUsersResponse>{
+        val user = userService.findUserByEmail(email)
+        return ResponseEntity.ok(user)
     }
 }

@@ -1,6 +1,7 @@
 package com.example.EcomSphere.Services.AuthService
 
 import com.example.EcomSphere.Helper.ForbiddenActionException
+import com.example.EcomSphere.Helper.NotFoundActionException
 import com.example.EcomSphere.MiddleWare.JwtUtil
 import com.example.EcomSphere.Services.UserService.User
 import com.example.EcomSphere.Services.UserService.UserRepository
@@ -20,7 +21,9 @@ class AuthService(
         repo.save(
             User(
                 email = email,
-                name = req.name,
+                firstName = req.firstName,
+                lastName = req.lastName,
+                address = req.address,
                 passwordHash = bcrypt.encode(req.password),
                 isASeller = false,
                 emailConfirm = false
@@ -45,5 +48,10 @@ class AuthService(
         user.emailConfirm = true
         repo.save(user)
     }
+
+    fun checkEmail(email: String): Boolean {
+        return repo.findByEmail(email).isPresent
+    }
+
 
 }
