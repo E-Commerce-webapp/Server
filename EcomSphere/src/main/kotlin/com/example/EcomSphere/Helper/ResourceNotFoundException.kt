@@ -1,3 +1,3 @@
 package com.example.EcomSphere.Helper
 
-class ForbiddenActionException(message: String) : RuntimeException(message)
+class ResourceNotFoundException(message: String) : RuntimeException(message)

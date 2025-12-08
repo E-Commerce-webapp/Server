@@ -1,8 +1,8 @@
 package com.example.EcomSphere.Listeners
 
-import com.example.EcomSphere.Models.Comment
-import com.example.EcomSphere.Repositories.CommentRepository
-import com.example.EcomSphere.Repositories.ProductRepository
+import com.example.EcomSphere.Services.CommentService.Comment
+import com.example.EcomSphere.Services.CommentService.CommentRepository
+import com.example.EcomSphere.Services.ProductService.ProductRepository
 import org.slf4j.LoggerFactory
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent
@@ -82,26 +82,27 @@ class CommentEventListener(
             val stats = commentRepository.getProductRatingStats(productId)
 
             if (stats != null && stats.count > 0) {
+                // Ensure we're using the correct field name from ProductRatingStats
                 product.ratingAvg = String.format("%.1f", stats.averageRating).toDouble()
                 product.reviewCount = stats.count
+                logger.debug("Updated product $productId rating to ${product.ratingAvg} with ${product.reviewCount} reviews")
             } else {
                 product.ratingAvg = 0.0
                 product.reviewCount = 0
+                logger.debug("No reviews found for product $productId, resetting ratings")
             }
 
             productRepository.save(product)
+            logger.debug("Successfully updated product $productId rating and review count")
         } catch (e: Exception) {
             logger.error("Error updating product rating for product $productId", e)
             throw e
         } finally {
-            lock.unlock()
+            try {
+                lock.unlock()
+            } catch (e: IllegalMonitorStateException) {
+                logger.warn("Lock was not held by current thread for product $productId")
+            }
         }
     }
 }
-
-// Add this data class for the aggregation result
-data class ProductRatingStats(
-    val productId: String,
-    val averageRating: Double,
-    val count: Int
-)
