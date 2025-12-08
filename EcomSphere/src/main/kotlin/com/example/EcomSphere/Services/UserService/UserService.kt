@@ -7,15 +7,17 @@ import org.springframework.stereotype.Service
 class UserService(
     private val userRepository: UserRepository
 ){
-    fun findUserByEmail(email: String): GetUsersResponse {
-        val user = userRepository.findByEmail(email)
-            .orElseThrow { NotFoundActionException("User with email $email is not available") }
+    fun findUserById(id: String): GetUsersResponse {
+        val user = userRepository.findById(id)
+            .orElseThrow { NotFoundActionException("User with ID $id is not available") }
 
         return GetUsersResponse(
             id = user.id,
             email = user.email,
             firstName = user.firstName,
-            lastName = user.lastName
+            lastName = user.lastName,
+            isASeller = user.isASeller!!,
+            emailConfirm = user.emailConfirm!!
         )
     }
 
