@@ -10,6 +10,9 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
+import org.springframework.web.cors.CorsConfigurationSource
+import org.springframework.web.cors.CorsConfiguration
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 
 @Configuration
 @EnableWebSecurity
@@ -43,19 +46,18 @@ class SecurityConfig(
     }
 
     @Bean
-    fun corsConfigurationSource(): org.springframework.web.cors.CorsConfigurationSource {
-        val configuration = org.springframework.web.cors.CorsConfiguration()
-        // Allow both the configured client URI and the default Vite dev server
+    fun corsConfigurationSource(): CorsConfigurationSource {
+        val configuration = CorsConfiguration()
         configuration.allowedOriginPatterns = listOf(
-            client_uri.ifEmpty { "http://localhost:5173" },
-            "http://localhost:5173"
+            "http://localhost:*",
+            "http://127.0.0.1:*"
         )
         configuration.allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
         configuration.allowedHeaders = listOf("*")
         configuration.exposedHeaders = listOf("Authorization")
         configuration.allowCredentials = true
 
-        val source = org.springframework.web.cors.UrlBasedCorsConfigurationSource()
+        val source = UrlBasedCorsConfigurationSource()
         source.registerCorsConfiguration("/**", configuration)
         return source
     }
