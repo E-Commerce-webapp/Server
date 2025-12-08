@@ -30,6 +30,8 @@ class SecurityConfig(
                     .requestMatchers("/auth/**").permitAll()
                     .requestMatchers("/products/external").permitAll()
                     .requestMatchers("/products").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/comments/product/**").permitAll()
+                    .requestMatchers("/api/comments/**").authenticated()
                     .anyRequest().authenticated()
             }
             .httpBasic { it.disable() }
