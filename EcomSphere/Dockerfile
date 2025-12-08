@@ -19,8 +19,12 @@ FROM eclipse-temurin:21-jre
 ENV JAVA_OPTS="-XX:MaxRAMPercentage=75 -XX:+UseZGC"
 
 WORKDIR /app
-COPY --from=builder /workspace/build/libs/*.jar /app/app.jar
 
+# Copy the JAR file from the builder stage
+COPY --from=builder /workspace/build/libs/*.jar app.jar
+
+# Expose the port the app runs on
 EXPOSE 8080
 
-ENTRYPOINT ["sh","-c","java $JAVA_OPTS -jar /app/app.jar"]
+# The command to run your application
+ENTRYPOINT ["sh", "-c", "java ${JAVA_OPTS} -jar /app/app.jar"]

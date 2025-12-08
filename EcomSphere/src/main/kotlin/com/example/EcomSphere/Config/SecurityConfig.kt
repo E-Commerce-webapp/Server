@@ -45,7 +45,11 @@ class SecurityConfig(
     @Bean
     fun corsConfigurationSource(): org.springframework.web.cors.CorsConfigurationSource {
         val configuration = org.springframework.web.cors.CorsConfiguration()
-        configuration.allowedOriginPatterns = listOf(client_uri)
+        // Allow both the configured client URI and the default Vite dev server
+        configuration.allowedOriginPatterns = listOf(
+            client_uri.ifEmpty { "http://localhost:5173" },
+            "http://localhost:5173"
+        )
         configuration.allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
         configuration.allowedHeaders = listOf("*")
         configuration.exposedHeaders = listOf("Authorization")
