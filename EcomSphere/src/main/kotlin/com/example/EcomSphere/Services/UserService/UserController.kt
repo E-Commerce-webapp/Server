@@ -35,9 +35,11 @@ class UserController(
         return ResponseEntity.ok("Verification email sent.")
     }
 
-    @GetMapping("/{email}")
-    fun findUserByEmail(@PathVariable email: String): ResponseEntity<GetUsersResponse>{
-        val user = userService.findUserByEmail(email)
+    @GetMapping("")
+    fun findUserByEmail(authentication: Authentication): ResponseEntity<GetUsersResponse>{
+        val principal = authentication.principal as CustomUserPrincipal
+        val id = principal.id
+        val user = userService.findUserById(id)
         return ResponseEntity.ok(user)
     }
 }
