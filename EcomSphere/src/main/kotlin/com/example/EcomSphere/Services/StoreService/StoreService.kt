@@ -90,4 +90,13 @@ class StoreService(
         return store.toResponse()
     }
 
+    fun getStoreByOwner(ownerId: String): StoreResponse {
+        val stores = storeRepository.findByOwner(ownerId)
+        if (stores.isEmpty()) {
+            throw NotFoundActionException("Store for user ${ownerId} not found")
+        }
+        // Prefer the first ACTIVE store; if none, fall back to the first store
+        val activeStore = stores.firstOrNull { it.status == StoreStatus.ACTIVE }
+        return (activeStore ?: stores.first()).toResponse()
+    }
 }
