@@ -27,20 +27,31 @@ class UserController(
     private val storeRepository: StoreRepository
 ){
     @PostMapping("/become-seller")
-    fun becomeSellerHandle(@RequestBody req: CreateStoreRequest, request: HttpServletRequest): ResponseEntity<String> {
+    fun becomeSellerHandle(
+        @RequestBody req: CreateStoreRequest,
+        request: HttpServletRequest
+    ): ResponseEntity<String> {
+
+        println(">>> becomeSellerHandle called with body: $req")
+
         val authHeader = request.getHeader("Authorization")
             ?: return ResponseEntity.status(401).body("Missing Authorization header")
+        println(">>> Authorization header: $authHeader")
 
         val token = authHeader.removePrefix("Bearer ").trim()
-        if (token.isEmpty()) {
-            return ResponseEntity.status(401).body("Invalid Authorization header")
-        }
+        println(">>> Raw token: $token")
 
         val email = jwtUtil.verifyAndGetEmail(token)
-            ?: return ResponseEntity.status(401).body("Invalid or expired token")
+        println(">>> Email from token: $email")
+
+        if (email == null) {
+            return ResponseEntity.status(401).body("Invalid or expired token")
+        }
 
         val user = userRepository.findByEmail(email)
             .orElseThrow { NotFoundActionException("User not found") }
+
+        println(">>> User found: id=${user.id}, email=${user.email}")
 
         val store = Store(
             name = req.name,
@@ -52,7 +63,10 @@ class UserController(
         )
         storeRepository.save(store)
 
+        println(">>> Store saved for user ${user.id}")
+
         emailService.sendVerificationEmail(email, token)
+        println(">>> Verification email sent")
 
         return ResponseEntity.ok("Verification email sent.")
     }
