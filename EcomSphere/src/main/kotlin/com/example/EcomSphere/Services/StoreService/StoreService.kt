@@ -17,8 +17,10 @@ class StoreService(
             description = this.description,
             address = this.address!!,
             owner = this.owner,
-            phoneNumber = this.phoneNumber
+            phoneNumber = this.phoneNumber,
+            status = this.status
         )
+
     fun createStore(req: CreateStoreRequest, owner: String): StoreResponse {
         val user = userRepository.findById(owner)
             .orElseThrow { NotFoundActionException("User with id ${owner} is not available") }
@@ -49,7 +51,8 @@ class StoreService(
                 name = req.name ?: existing.name,
                 description = req.description ?: existing.description,
                 address = req.address ?: existing.address,
-                phoneNumber = req.phoneNumber ?: existing.phoneNumber
+                phoneNumber = req.phoneNumber ?: existing.phoneNumber,
+                status = req.status ?: existing.status
             )
             val saved = storeRepository.save(updated)
             return saved.toResponse()
@@ -75,7 +78,8 @@ class StoreService(
                 description = store.description,
                 owner = store.owner,
                 phoneNumber = store.phoneNumber,
-                address = store.address!!
+                address = store.address!!,
+                status = store.status
             )
         }
     }
