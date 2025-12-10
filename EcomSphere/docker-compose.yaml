@@ -14,4 +14,16 @@ services:
       MONGO_URI: ${MONGO_URI:-mongodb://localhost:27017/authdb}
       JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret}
       SERVER_PORT: ${SERVER_PORT:-8080}
+
+      # map to Spring Boot mail + app properties
+      SPRING_MAIL_HOST: smtp.gmail.com
+      SPRING_MAIL_PORT: 587
+      SPRING_MAIL_USERNAME: ${MAIL_USERNAME}
+      SPRING_MAIL_PASSWORD: ${MAIL_PASSWORD}
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "true"
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "true"
+      SPRING_MAIL_FROM: ${MAIL_USERNAME}
+
+      APP_BASE-URL: http://localhost:${SERVER_PORT:-8080}
+      CLIENT_URI: ${CLIENT_URI}
     restart: unless-stopped

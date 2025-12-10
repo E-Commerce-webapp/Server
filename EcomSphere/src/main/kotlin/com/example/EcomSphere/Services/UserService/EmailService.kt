@@ -41,7 +41,13 @@ class EmailService(
         if (userRef.emailConfirm == true)
             throw EmailAlreadyVerifiedException("Email already verified")
 
-
-        mailSender.send(message)
+        try {
+            mailSender.send(message)
+            println(">>> Verification email sent to $email")
+        } catch (ex: Exception) {
+            ex.printStackTrace()
+            // In dev/demo, we don't fail the whole request if email sending breaks.
+            // The caller can still proceed; the log will show what went wrong.
+        }
     }
 }
