@@ -30,6 +30,7 @@ class SecurityConfig(
                     .requestMatchers("/auth/**").permitAll()
                     .requestMatchers("/products/external").permitAll()
                     .requestMatchers("/products").permitAll()
+                    .requestMatchers("/api/users/submit-kyc").authenticated()
                     .anyRequest().authenticated()
             }
             .httpBasic { it.disable() }

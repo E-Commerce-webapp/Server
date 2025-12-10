@@ -5,41 +5,46 @@ import com.example.EcomSphere.MiddleWare.JwtUtil
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.Authentication
-import org.springframework.stereotype.Controller
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.*
 
-@Controller
-@RequestMapping("/users")
+@RestController
+@RequestMapping("/api/users")
 class UserController(
     private val userService: UserService,
-    private val emailService: EmailService,
     private val jwtUtil: JwtUtil
-){
-    @GetMapping("/become-seller")
-    fun becomeSellerHandle(request: HttpServletRequest): ResponseEntity<String> {
-        val authHeader = request.getHeader("Authorization")
-            ?: return ResponseEntity.status(401).body("Missing Authorization header")
-
-        val token = authHeader.removePrefix("Bearer ").trim()
-        if (token.isEmpty()) {
-            return ResponseEntity.status(401).body("Invalid Authorization header")
+) {
+    @PostMapping("/submit-kyc")
+    fun submitKyc(
+        authentication: Authentication,
+        @RequestBody kycData: KycSubmissionRequest
+    ): ResponseEntity<Map<String, String>> {
+        val principal = authentication.principal as CustomUserPrincipal
+        val userId = principal.id
+        
+        userService.submitKyc(userId, kycData)
+        
+        return ResponseEntity.ok(mapOf(
+            "message" to "Verification email sent. Please check your email to complete the seller registration."
+        ))
+    }
+    
+    @PostMapping("/verify-seller")
+    fun verifySeller(
+        @RequestParam token: String
+    ): ResponseEntity<KycVerificationResponse> {
+        val result = userService.verifySeller(token)
+        if (result.success) {
+            // In a real app, you would get the user ID from the token and update their status
+            // For now, we'll just return the success message
+            return ResponseEntity.ok(result)
         }
-
-        val email = jwtUtil.verifyAndGetEmail(token)
-            ?: return ResponseEntity.status(401).body("Invalid or expired token")
-
-        emailService.sendVerificationEmail(email, token)
-
-        return ResponseEntity.ok("Verification email sent.")
+        return ResponseEntity.badRequest().body(result)
     }
 
     @GetMapping("")
-    fun findUserByEmail(authentication: Authentication): ResponseEntity<GetUsersResponse>{
+    fun getUserInfo(authentication: Authentication): ResponseEntity<GetUsersResponse> {
         val principal = authentication.principal as CustomUserPrincipal
-        val id = principal.id
-        val user = userService.findUserById(id)
+        val user = userService.findUserById(principal.id)
         return ResponseEntity.ok(user)
     }
 }
