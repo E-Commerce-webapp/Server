@@ -10,15 +10,21 @@ class UserService(
     fun findUserById(id: String): GetUsersResponse {
         val user = userRepository.findById(id)
             .orElseThrow { NotFoundActionException("User with ID $id is not available") }
-
-        return GetUsersResponse(
-            id = user.id,
-            email = user.email,
+        
+        println("User data from DB: $user")
+        
+        val response = GetUsersResponse(
             firstName = user.firstName,
             lastName = user.lastName,
+            email = user.email,
+            id = user.id,
             isASeller = user.isASeller!!,
-            emailConfirm = user.emailConfirm!!
+            emailConfirm = user.emailConfirm!!,
+            address = user.address
         )
+        
+        println("Sending response: $response")
+        return response
     }
 
 }
