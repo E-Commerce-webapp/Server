@@ -57,6 +57,36 @@ class OrderService(
     fun updateOrderStatus(orderId: String, status: OrderStatus): Order? {
         val order = orderRepository.findById(orderId).orElse(null) ?: return null
         
+        // Define the valid status progression order
+        val statusOrder = listOf(
+            OrderStatus.PENDING,
+            OrderStatus.CONFIRMED,
+            OrderStatus.PROCESSING,
+            OrderStatus.SHIPPED,
+            OrderStatus.DELIVERED
+        )
+        
+        val currentIndex = statusOrder.indexOf(order.status)
+        val newIndex = statusOrder.indexOf(status)
+        
+        // Allow CANCELLED from any state, but other statuses must move forward
+        if (status != OrderStatus.CANCELLED) {
+            if (currentIndex == -1 || newIndex == -1) {
+                throw IllegalArgumentException("Invalid status transition")
+            }
+            if (newIndex <= currentIndex) {
+                throw IllegalArgumentException("Cannot move order status backward. Current: ${order.status}, Requested: $status")
+            }
+        }
+        
+        // Cannot update if already delivered or cancelled
+        if (order.status == OrderStatus.DELIVERED) {
+            throw IllegalArgumentException("Cannot update status of a delivered order")
+        }
+        if (order.status == OrderStatus.CANCELLED) {
+            throw IllegalArgumentException("Cannot update status of a cancelled order")
+        }
+        
         val updatedOrder = order.copy(
             status = status,
             updatedAt = LocalDateTime.now()
@@ -73,8 +103,8 @@ class OrderService(
             throw IllegalArgumentException("Order does not belong to this user")
         }
         
-        if (order.status !in listOf(OrderStatus.PENDING, OrderStatus.CONFIRMED)) {
-            throw IllegalArgumentException("Order cannot be cancelled in current status: ${order.status}")
+        if (order.status != OrderStatus.PENDING) {
+            throw IllegalArgumentException("Order can only be cancelled while it is still pending. Current status: ${order.status}")
         }
         
         val cancelledOrder = order.copy(
