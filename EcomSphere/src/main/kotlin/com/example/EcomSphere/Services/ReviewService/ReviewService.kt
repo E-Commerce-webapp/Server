@@ -1,11 +1,13 @@
 package com.example.EcomSphere.Services.ReviewService
 
 import com.example.EcomSphere.Helper.ForbiddenActionException
+import com.example.EcomSphere.Services.UserService.UserRepository
 import org.springframework.stereotype.Service
 
 @Service
 class ReviewService(
-    private val reviewRepository: ReviewRepository
+    private val reviewRepository: ReviewRepository,
+    private val userRepository: UserRepository
 ) {
 
     fun createReview(request: CreateReviewRequest, userId: String): ReviewResponse {
@@ -78,13 +80,18 @@ class ReviewService(
         reviewRepository.deleteById(reviewId)
     }
 
-    private fun Review.toResponse(): ReviewResponse =
-        ReviewResponse(
+    private fun Review.toResponse(): ReviewResponse {
+        val user = userRepository.findById(this.userId).orElse(null)
+        val userName = if (user != null) "${user.firstName} ${user.lastName}" else "Anonymous"
+        
+        return ReviewResponse(
             id = this.id!!,
             productId = this.productId,
             userId = this.userId,
+            userName = userName,
             rating = this.rating,
             reviewText = this.reviewText,
             createdAt = this.createdAt.toString()
         )
+    }
 }

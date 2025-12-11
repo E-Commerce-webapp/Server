@@ -15,6 +15,7 @@ data class ReviewResponse(
     val id: String,
     val productId: String,
     val userId: String,
+    val userName: String,
     val rating: Int,
     val reviewText: String,
     val createdAt: String
