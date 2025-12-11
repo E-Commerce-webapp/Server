@@ -1,11 +1,13 @@
 package com.example.EcomSphere.Services.OrderService
 
+import com.example.EcomSphere.Services.NotificationService.NotificationService
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
 @Service
 class OrderService(
-    private val orderRepository: OrderRepository
+    private val orderRepository: OrderRepository,
+    private val notificationService: NotificationService
 ) {
     fun createOrder(userId: String, request: CreateOrderRequest): Order {
         val subtotal = request.items.sumOf { it.price * it.quantity }
@@ -92,7 +94,17 @@ class OrderService(
             updatedAt = LocalDateTime.now()
         )
         
-        return orderRepository.save(updatedOrder)
+        val savedOrder = orderRepository.save(updatedOrder)
+        
+        // Send notification to buyer about status change
+        notificationService.notifyOrderStatusChange(
+            buyerId = order.userId,
+            orderId = order.id!!,
+            newStatus = status.name,
+            orderShortId = order.id.takeLast(8)
+        )
+        
+        return savedOrder
     }
 
     fun cancelOrder(orderId: String, userId: String): Order? {
@@ -112,7 +124,21 @@ class OrderService(
             updatedAt = LocalDateTime.now()
         )
         
-        return orderRepository.save(cancelledOrder)
+        val savedOrder = orderRepository.save(cancelledOrder)
+        
+        // Notify sellers about the cancellation
+        order.items.map { it.sellerId }.distinct().forEach { sellerId ->
+            if (sellerId != null) {
+                notificationService.notifyOrderStatusChange(
+                    buyerId = sellerId,
+                    orderId = order.id!!,
+                    newStatus = "CANCELLED",
+                    orderShortId = order.id.takeLast(8)
+                )
+            }
+        }
+        
+        return savedOrder
     }
 
     fun Order.toResponse(): OrderResponse {

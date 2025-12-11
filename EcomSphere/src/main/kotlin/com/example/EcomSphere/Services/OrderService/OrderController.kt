@@ -1,6 +1,7 @@
 package com.example.EcomSphere.Services.OrderService
 
 import com.example.EcomSphere.MiddleWare.JwtUtil
+import com.example.EcomSphere.Services.NotificationService.NotificationService
 import com.example.EcomSphere.Services.UserService.UserRepository
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -11,7 +12,8 @@ import org.springframework.web.bind.annotation.*
 class OrderController(
     private val orderService: OrderService,
     private val jwtUtil: JwtUtil,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val notificationService: NotificationService
 ) {
     private fun getUserIdFromToken(authHeader: String?): String {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -36,6 +38,20 @@ class OrderController(
             println(">>> Order items: ${request.items.map { "${it.productTitle} (sellerId=${it.sellerId})" }}")
             val order = orderService.createOrder(userId, request)
             println(">>> Order created with id: ${order.id}")
+            
+            // Notify sellers about new order
+            val buyerName = request.shippingAddress.fullName
+            order.items.map { it.sellerId }.distinct().forEach { sellerId ->
+                if (sellerId != null) {
+                    notificationService.notifyNewOrder(
+                        sellerId = sellerId,
+                        orderId = order.id!!,
+                        orderShortId = order.id.takeLast(8),
+                        buyerName = buyerName
+                    )
+                }
+            }
+            
             ResponseEntity.status(HttpStatus.CREATED).body(with(orderService) { order.toResponse() })
         } catch (e: IllegalArgumentException) {
             ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(mapOf("error" to e.message))
@@ -137,7 +153,13 @@ class OrderController(
             val updatedOrder = orderService.updateOrderStatus(orderId, status)
             ResponseEntity.ok(with(orderService) { updatedOrder!!.toResponse() })
         } catch (e: IllegalArgumentException) {
-            ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(mapOf("error" to e.message))
+            // Check if it's an auth error or a business logic error
+            val message = e.message ?: ""
+            if (message.contains("Authorization") || message.contains("token") || message.contains("User not found")) {
+                ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(mapOf("error" to e.message))
+            } else {
+                ResponseEntity.status(HttpStatus.BAD_REQUEST).body(mapOf("error" to e.message))
+            }
         } catch (e: Exception) {
             ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("error" to "Failed to update order status: ${e.message}"))
         }
