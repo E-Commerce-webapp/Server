@@ -14,8 +14,11 @@ class ProductService(
     private val storeRepository: StoreRepository
 ){
 
-    private fun Product.toResponse(): ProductResponse =
-        ProductResponse(
+    private fun Product.toResponse(): ProductResponse {
+        val storeName = this.storeId?.let { id ->
+            storeRepository.findById(id).orElse(null)?.name
+        }
+        return ProductResponse(
             id = this.id!!,
             title = this.title,
             description = this.description,
@@ -23,8 +26,10 @@ class ProductService(
             stock = this.stock,
             images = listOf(this.images),
             storeId = this.storeId ?: "",
-            category = this.category
+            category = this.category,
+            storeName = storeName
         )
+    }
 
     fun getAllProductsExternal(): List<GetAllProductsResponse> {
         val response = webClientConfig.webClient().get()
@@ -46,6 +51,9 @@ class ProductService(
         val products = productRepository.findAll()
 
         return products.map { product ->
+            val storeName = product.storeId?.let { id ->
+                storeRepository.findById(id).orElse(null)?.name
+            }
             GetAllProductsResponse(
                 id = product.id!!,
                 title = product.title,
@@ -54,7 +62,8 @@ class ProductService(
                 stock = product.stock,
                 images = listOf(product.images),
                 category = product.category,
-                storeId = product.storeId ?: ""
+                storeId = product.storeId ?: "",
+                storeName = storeName
             )
         }
     }

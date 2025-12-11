@@ -12,7 +12,8 @@ data class GetAllProductsResponse(
     val price: Float,
     val stock: Int,
     val images: List<String>,
-    val storeId: String? = null
+    val storeId: String? = null,
+    val storeName: String? = null
 )
 data class ProductsApiResponse(
     val products: List<GetAllProductsResponse>,
@@ -28,5 +29,6 @@ data class ProductResponse(
     val stock: Int,
     val images: List<String>,
     val storeId: String,
-    val category: String
+    val category: String,
+    val storeName: String? = null
 )
