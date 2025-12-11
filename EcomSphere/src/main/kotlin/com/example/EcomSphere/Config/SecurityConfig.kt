@@ -28,8 +28,9 @@ class SecurityConfig(
                 it
                     .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                     .requestMatchers("/auth/**").permitAll()
-                    .requestMatchers("/products/external").permitAll()
-                    .requestMatchers("/products").permitAll()
+                    // Public product reads (list + details)
+                    .requestMatchers(HttpMethod.GET, "/products/external").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/products/**").permitAll()
                     .anyRequest().authenticated()
             }
             .httpBasic { it.disable() }

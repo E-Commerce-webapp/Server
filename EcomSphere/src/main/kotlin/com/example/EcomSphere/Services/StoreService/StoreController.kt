@@ -40,6 +40,12 @@ class StoreController (
         return ResponseEntity.ok(store)
     }
 
+    @GetMapping("/user/{userId}")
+    fun getStoreByUser(@PathVariable userId: String): ResponseEntity<StoreResponse> {
+        val store = storeService.getStoreByOwner(userId)
+        return ResponseEntity.ok(store)
+    }
+
     @PutMapping("/{id}")
     fun updateStore(@RequestBody request: UpdateStoreRequest, @PathVariable id: String, authentication: Authentication): ResponseEntity<StoreResponse>{
         val principal = authentication.principal as CustomUserPrincipal

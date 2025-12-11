@@ -3,8 +3,11 @@ package com.example.EcomSphere.Services.AuthService
 import com.example.EcomSphere.Helper.ForbiddenActionException
 import com.example.EcomSphere.Helper.NotFoundActionException
 import com.example.EcomSphere.MiddleWare.JwtUtil
+import com.example.EcomSphere.Services.StoreService.StoreRepository
+import com.example.EcomSphere.Services.StoreService.StoreStatus
 import com.example.EcomSphere.Services.UserService.User
 import com.example.EcomSphere.Services.UserService.UserRepository
+
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Service
 
@@ -12,7 +15,9 @@ import org.springframework.stereotype.Service
 class AuthService(
     private val repo: UserRepository,
     private val jwt: JwtUtil,
+    private val storeRepository: StoreRepository,
 ) {
+
     private val bcrypt = BCryptPasswordEncoder()
 
     fun register(req: RegisterRequest) {
@@ -47,11 +52,19 @@ class AuthService(
         user.isASeller = true
         user.emailConfirm = true
         repo.save(user)
+
+        val userId = user.id
+        if (userId != null) {
+            val stores = storeRepository.findByOwner(userId)
+            stores.forEach { store ->
+                if (store.status == StoreStatus.PENDING) {
+                    storeRepository.save(store.copy(status = StoreStatus.ACTIVE))
+                }
+            }
+        }
     }
 
     fun checkEmail(email: String): Boolean {
         return repo.findByEmail(email).isPresent
     }
-
-
 }

@@ -31,6 +31,12 @@ class ProductController(
         return ResponseEntity.ok(products)
     }
 
+    @GetMapping("/{id}")
+    fun getProductById(@PathVariable id: String): ResponseEntity<ProductResponse> {
+        val product = productService.getProductById(id)
+        return ResponseEntity.ok(product)
+    }
+
     @PostMapping()
     fun createProduct(@RequestBody request: CreateProductRequest, authentication: Authentication): ResponseEntity<ProductResponse>{
         val principal = authentication.principal as CustomUserPrincipal

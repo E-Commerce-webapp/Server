@@ -12,7 +12,7 @@ data class Product(
     val price: Float,
     val stock: Int,
     val images: String,
-    val sellerId: String
+    val storeId: String? = null
 )
 
 

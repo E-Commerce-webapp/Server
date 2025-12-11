@@ -13,5 +13,21 @@ data class User(
     var isASeller: Boolean? = null,
     var emailConfirm: Boolean? = null,
     var address: String,
-    var firstName: String
+    var firstName: String,
+    var savedShippingAddress: SavedShippingAddress? = null,
+    var savedPaymentMethod: SavedPaymentMethod? = null
+)
+
+data class SavedShippingAddress(
+    val fullName: String,
+    val addressLine1: String,
+    val city: String,
+    val postalCode: String,
+    val country: String
+)
+
+data class SavedPaymentMethod(
+    val cardLastFour: String,
+    val cardExpiry: String,
+    val cardType: String? = null
 )
