@@ -59,6 +59,12 @@ class ProductService(
         }
     }
 
+    fun getProductById(id: String): ProductResponse {
+        val product = productRepository.findById(id)
+            .orElseThrow { ForbiddenActionException("Product with id=$id not found") }
+        return product.toResponse()
+    }
+
     fun addProduct(request: CreateProductRequest, userId: String): ProductResponse{
         val store = storeRepository.findById(request.storeId)
             .orElseThrow { ForbiddenActionException("Store with id=${request.storeId} not found") }
