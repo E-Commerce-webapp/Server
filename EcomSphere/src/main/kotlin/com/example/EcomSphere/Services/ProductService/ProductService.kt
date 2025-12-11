@@ -15,8 +15,8 @@ class ProductService(
 ){
 
     private fun Product.toResponse(): ProductResponse {
-        val storeName = this.storeId?.let { id ->
-            storeRepository.findById(id).orElse(null)?.name
+        val store = this.storeId?.let { id ->
+            storeRepository.findById(id).orElse(null)
         }
         return ProductResponse(
             id = this.id!!,
@@ -27,7 +27,8 @@ class ProductService(
             images = listOf(this.images),
             storeId = this.storeId ?: "",
             category = this.category,
-            storeName = storeName
+            storeName = store?.name,
+            sellerId = store?.owner
         )
     }
 
@@ -51,8 +52,8 @@ class ProductService(
         val products = productRepository.findAll()
 
         return products.map { product ->
-            val storeName = product.storeId?.let { id ->
-                storeRepository.findById(id).orElse(null)?.name
+            val store = product.storeId?.let { id ->
+                storeRepository.findById(id).orElse(null)
             }
             GetAllProductsResponse(
                 id = product.id!!,
@@ -63,7 +64,8 @@ class ProductService(
                 images = listOf(product.images),
                 category = product.category,
                 storeId = product.storeId ?: "",
-                storeName = storeName
+                storeName = store?.name,
+                sellerId = store?.owner
             )
         }
     }
