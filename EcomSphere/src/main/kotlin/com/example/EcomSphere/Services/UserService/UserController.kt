@@ -14,6 +14,7 @@ import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 
@@ -77,5 +78,16 @@ class UserController(
         val id = principal.id
         val user = userService.findUserById(id)
         return ResponseEntity.ok(user)
+    }
+
+    @PutMapping("/checkout-info")
+    fun saveCheckoutInfo(
+        @RequestBody request: SaveCheckoutInfoRequest,
+        authentication: Authentication
+    ): ResponseEntity<GetUsersResponse> {
+        val principal = authentication.principal as CustomUserPrincipal
+        val userId = principal.id
+        val updatedUser = userService.saveCheckoutInfo(userId, request)
+        return ResponseEntity.ok(updatedUser)
     }
 }

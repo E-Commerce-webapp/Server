@@ -8,5 +8,26 @@ data class GetUsersResponse(
     val id: String?, 
     val isASeller: Boolean, 
     val emailConfirm: Boolean,
-    val address: String
+    val address: String,
+    val savedShippingAddress: SavedShippingAddress? = null,
+    val savedPaymentMethod: SavedPaymentMethod? = null
+)
+
+data class SaveShippingAddressRequest(
+    val fullName: String,
+    val addressLine1: String,
+    val city: String,
+    val postalCode: String,
+    val country: String
+)
+
+data class SavePaymentMethodRequest(
+    val cardLastFour: String,
+    val cardExpiry: String,
+    val cardType: String? = null
+)
+
+data class SaveCheckoutInfoRequest(
+    val shippingAddress: SaveShippingAddressRequest? = null,
+    val paymentMethod: SavePaymentMethodRequest? = null
 )
