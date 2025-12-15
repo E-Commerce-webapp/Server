@@ -1,5 +1,6 @@
 package com.example.EcomSphere.Config
 
+import com.cloudinary.Cloudinary
 import com.example.EcomSphere.MiddleWare.JwtAuthFilter
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
@@ -15,7 +16,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 class SecurityConfig(
     private val jwtAuthFilter: JwtAuthFilter,
-    @Value("\${client.uri}") private val client_uri: String
+    @Value("\${client.uri}") private val client_uri: String,
+    @Value("\${cloudinary.cloudName}") private val cloudName: String,
+    @Value("\${cloudinary.apiKey}") private val apiKey: String,
+    @Value("\${cloudinary.apiSecret}") private val apiSecret: String
 ) {
 
     @Bean
@@ -53,5 +57,15 @@ class SecurityConfig(
         val source = org.springframework.web.cors.UrlBasedCorsConfigurationSource()
         source.registerCorsConfiguration("/**", configuration)
         return source
+    }
+
+    @Bean
+    fun cloudinary(): Cloudinary {
+        val config = mapOf(
+            "cloud_name" to cloudName,
+            "api_key" to apiKey,
+            "api_secret" to apiSecret
+        )
+        return Cloudinary(config)
     }
 }

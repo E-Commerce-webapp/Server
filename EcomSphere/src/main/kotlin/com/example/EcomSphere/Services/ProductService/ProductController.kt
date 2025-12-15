@@ -6,11 +6,14 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.ModelAttribute
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestPart
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.multipart.MultipartFile
 
 
 @RestController
@@ -37,12 +40,25 @@ class ProductController(
         return ResponseEntity.ok(product)
     }
 
-    @PostMapping()
-    fun createProduct(@RequestBody request: CreateProductRequest, authentication: Authentication): ResponseEntity<ProductResponse>{
+    @PostMapping(consumes = ["multipart/form-data"])
+    fun createProduct(
+        @ModelAttribute form: CreateProductForm,
+        @RequestPart("image") image: MultipartFile,
+        authentication: Authentication
+    ): ResponseEntity<ProductResponse> {
         val principal = authentication.principal as CustomUserPrincipal
         val sellerId = principal.id
-        val created = productService.addProduct(request, sellerId)
-        return ResponseEntity.ok(created)
+
+        val req = CreateProductRequest(
+            title = form.title,
+            description = form.description,
+            category = form.category,
+            price = form.price,
+            stock = form.stock,
+            storeId = form.storeId
+        )
+
+        return ResponseEntity.ok(productService.addProduct(req, sellerId, image))
     }
 
     @PutMapping("/{id}")

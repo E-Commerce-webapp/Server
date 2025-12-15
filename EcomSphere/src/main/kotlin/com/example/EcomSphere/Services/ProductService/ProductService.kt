@@ -2,16 +2,20 @@ package com.example.EcomSphere.Services.ProductService
 
 import com.example.EcomSphere.Config.WebClientConfig
 import com.example.EcomSphere.Helper.ForbiddenActionException
+import com.example.EcomSphere.Services.CloudinaryService.CloudinaryService
 import com.example.EcomSphere.Services.StoreService.StoreRepository
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import org.springframework.web.multipart.MultipartFile
+
 
 @Service
 class ProductService(
     @Value("\${external.api}") private val baseUrl: String,
     private val productRepository: ProductRepository,
     private val webClientConfig: WebClientConfig,
-    private val storeRepository: StoreRepository
+    private val storeRepository: StoreRepository,
+    private val cloudinaryService: CloudinaryService
 ){
 
     private fun Product.toResponse(): ProductResponse {
@@ -76,7 +80,12 @@ class ProductService(
         return product.toResponse()
     }
 
-    fun addProduct(request: CreateProductRequest, userId: String): ProductResponse{
+    fun addProduct(
+        request: CreateProductRequest,
+        userId: String,
+        image: MultipartFile?
+    ): ProductResponse {
+
         val store = storeRepository.findById(request.storeId)
             .orElseThrow { ForbiddenActionException("Store with id=${request.storeId} not found") }
 
@@ -84,18 +93,24 @@ class ProductService(
             throw ForbiddenActionException("You are not allowed to add products to this store")
         }
 
+        val uploaded = image?.takeIf { !it.isEmpty }?.let {
+            cloudinaryService.uploadImage(it, folder = "products/${request.storeId}")
+        }
+
         val product = Product(
             title = request.title,
             description = request.description,
             price = request.price,
             stock = request.stock,
-            images = request.images,
+            images = uploaded?.secureUrl!!,
             storeId = request.storeId,
             category = request.category
         )
+
         val saved = productRepository.save(product)
         return saved.toResponse()
     }
+
 
     fun updateProduct(id: String, request: UpdateProductRequest, userId: String): ProductResponse{
         val existing = productRepository.findById(id)
