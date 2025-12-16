@@ -26,4 +26,7 @@ services:
 
       APP_BASE-URL: http://localhost:${SERVER_PORT:-8080}
       CLIENT_URI: ${CLIENT_URI}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-placeholder}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-placeholder}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-placeholder}
     restart: unless-stopped

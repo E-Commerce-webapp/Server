@@ -48,7 +48,7 @@ class SecurityConfig(
     @Bean
     fun corsConfigurationSource(): org.springframework.web.cors.CorsConfigurationSource {
         val configuration = org.springframework.web.cors.CorsConfiguration()
-        configuration.allowedOriginPatterns = listOf(client_uri)
+        configuration.allowedOriginPatterns = listOf(client_uri, "http://localhost:*")
         configuration.allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
         configuration.allowedHeaders = listOf("*")
         configuration.exposedHeaders = listOf("Authorization")

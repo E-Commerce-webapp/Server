@@ -149,10 +149,10 @@ class OrderService(
             shippingAddress = this.shippingAddress,
             paymentMethod = this.paymentMethod,
             status = this.status.name,
-            subtotal = this.subtotal,
-            shippingCost = this.shippingCost,
-            taxAmount = this.taxAmount,
-            totalAmount = this.totalAmount,
+            subtotal = this.subtotal ?: 0.0,
+            shippingCost = this.shippingCost ?: 0.0,
+            taxAmount = this.taxAmount ?: 0.0,
+            totalAmount = this.totalAmount ?: 0.0,
             createdAt = this.createdAt,
             updatedAt = this.updatedAt
         )

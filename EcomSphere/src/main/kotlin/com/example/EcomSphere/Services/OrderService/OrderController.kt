@@ -95,11 +95,21 @@ class OrderController(
     ): ResponseEntity<Any> {
         return try {
             val userId = getUserIdFromToken(authHeader)
+            println(">>> Fetching orders for userId: $userId")
             val orders = orderService.getOrdersByUserId(userId)
-            ResponseEntity.ok(orders.map { with(orderService) { it.toResponse() } })
+            println(">>> Found ${orders.size} orders")
+            orders.forEachIndexed { index, order ->
+                println(">>> Order $index: id=${order.id}, status=${order.status}, items=${order.items.size}")
+            }
+            val response = orders.map { with(orderService) { it.toResponse() } }
+            println(">>> Mapped ${response.size} orders to response")
+            ResponseEntity.ok(response)
         } catch (e: IllegalArgumentException) {
+            println(">>> IllegalArgumentException: ${e.message}")
             ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(mapOf("error" to e.message))
         } catch (e: Exception) {
+            println(">>> Exception: ${e.javaClass.name}: ${e.message}")
+            e.printStackTrace()
             ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("error" to "Failed to fetch orders: ${e.message}"))
         }
     }
