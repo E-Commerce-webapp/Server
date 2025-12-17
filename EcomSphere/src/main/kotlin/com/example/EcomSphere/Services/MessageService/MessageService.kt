@@ -56,18 +56,18 @@ class MessageService(
         receiverName: String,
         orderId: String?
     ): Conversation {
-        // Try to find existing conversation between these users
+        // Find existing conversation between these two users (ignore orderId)
+        // One buyer and one seller should only have ONE conversation
         val existingConversations = conversationRepository.findByParticipantsContaining(senderId)
         val existingConversation = existingConversations.find { conv ->
-            conv.participants.contains(receiverId) && 
-            (orderId == null || conv.orderId == orderId)
+            conv.participants.contains(receiverId)
         }
         
         if (existingConversation != null) {
             return existingConversation
         }
         
-        // Create new conversation
+        // Create new conversation (orderId is stored for reference but not used for lookup)
         val conversation = Conversation(
             participants = listOf(senderId, receiverId),
             participantNames = mapOf(senderId to senderName, receiverId to receiverName),
