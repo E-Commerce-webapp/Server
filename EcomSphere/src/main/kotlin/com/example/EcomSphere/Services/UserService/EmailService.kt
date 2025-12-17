@@ -50,4 +50,13 @@ class EmailService(
             // The caller can still proceed; the log will show what went wrong.
         }
     }
+
+    fun sendEmail(message: SimpleMailMessage) {
+        message.setFrom(from)
+        try {
+            mailSender.send(message)
+        } catch (ex: Exception) {
+            ex.printStackTrace()
+        }
+    }
 }

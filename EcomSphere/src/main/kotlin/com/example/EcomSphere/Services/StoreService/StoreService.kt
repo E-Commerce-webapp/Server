@@ -29,6 +29,12 @@ class StoreService(
             throw ForbiddenActionException("User is not allowed to create a store")
         }
 
+        // Check if user already has a store (each seller can only have one store)
+        val existingStores = storeRepository.findByOwner(owner)
+        if (existingStores.isNotEmpty()) {
+            throw ForbiddenActionException("You already have a store. Each seller can only have one store.")
+        }
+
         val store = Store(
             name = req.name,
             description = req.description,
