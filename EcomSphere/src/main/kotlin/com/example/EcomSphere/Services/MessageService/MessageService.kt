@@ -1,6 +1,7 @@
 package com.example.EcomSphere.Services.MessageService
 
 import com.example.EcomSphere.Services.UserService.UserRepository
+import com.example.EcomSphere.Services.StoreService.StoreRepository
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
@@ -8,7 +9,8 @@ import java.time.LocalDateTime
 class MessageService(
     private val messageRepository: MessageRepository,
     private val conversationRepository: ConversationRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val storeRepository: StoreRepository
 ) {
     fun sendMessage(senderId: String, request: SendMessageRequest): Message {
         val sender = userRepository.findById(senderId)
@@ -77,13 +79,33 @@ class MessageService(
         return conversationRepository.save(conversation)
     }
     
+    // Get display name for a user: store name if seller, otherwise personal name
+    private fun getDisplayName(userId: String): String {
+        val user = userRepository.findById(userId).orElse(null) ?: return "Unknown User"
+        
+        // If user is a seller, try to get their store name
+        if (user.isASeller == true) {
+            val stores = storeRepository.findByOwner(userId)
+            val store = stores.firstOrNull()
+            if (store != null) {
+                return store.name
+            }
+        }
+        
+        return "${user.firstName} ${user.lastName}"
+    }
+
     fun getConversations(userId: String): List<ConversationResponse> {
         val conversations = conversationRepository.findByParticipantsContaining(userId)
         return conversations.map { conv ->
             val unreadCount = messageRepository.countByConversationIdAndReceiverIdAndIsReadFalse(
                 conv.id!!, userId
             )
-            conv.toResponse(unreadCount.toInt())
+            // Fetch fresh participant names (handles name changes and shows store name for sellers)
+            val freshParticipantNames = conv.participants.associateWith { participantId ->
+                getDisplayName(participantId)
+            }
+            conv.toResponse(unreadCount.toInt(), freshParticipantNames)
         }.sortedByDescending { it.lastMessageAt }
     }
     
@@ -108,8 +130,13 @@ class MessageService(
             conversationId, userId
         )
         
+        // Fetch fresh participant names
+        val freshParticipantNames = conversation.participants.associateWith { participantId ->
+            getDisplayName(participantId)
+        }
+        
         return ConversationWithMessagesResponse(
-            conversation = conversation.toResponse(unreadCount.toInt()),
+            conversation = conversation.toResponse(unreadCount.toInt(), freshParticipantNames),
             messages = messages.map { it.toResponse() }
         )
     }
@@ -129,10 +156,10 @@ class MessageService(
         createdAt = createdAt
     )
     
-    fun Conversation.toResponse(unreadCount: Int) = ConversationResponse(
+    fun Conversation.toResponse(unreadCount: Int, freshNames: Map<String, String>? = null) = ConversationResponse(
         id = id!!,
         participants = participants,
-        participantNames = participantNames,
+        participantNames = freshNames ?: participantNames,
         orderId = orderId,
         lastMessage = lastMessage,
         lastMessageAt = lastMessageAt,
