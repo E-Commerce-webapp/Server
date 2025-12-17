@@ -34,22 +34,28 @@ class OrderController(
     ): ResponseEntity<Any> {
         return try {
             val userId = getUserIdFromToken(authHeader)
-            val order = orderService.createOrder(userId, request)
             
-            // Notify sellers about new order
+            // Create separate orders for each seller
+            val orders = orderService.createOrders(userId, request)
+            
+            // Notify each seller about their order
             val buyerName = request.shippingAddress.fullName
-            order.items.map { it.sellerId }.distinct().forEach { sellerId ->
-                if (sellerId != null) {
-                    notificationService.notifyNewOrder(
-                        sellerId = sellerId,
-                        orderId = order.id!!,
-                        orderShortId = order.id.takeLast(8),
-                        buyerName = buyerName
-                    )
+            orders.forEach { order ->
+                order.items.map { it.sellerId }.distinct().forEach { sellerId ->
+                    if (sellerId != null) {
+                        notificationService.notifyNewOrder(
+                            sellerId = sellerId,
+                            orderId = order.id!!,
+                            orderShortId = order.id.takeLast(8),
+                            buyerName = buyerName
+                        )
+                    }
                 }
             }
             
-            ResponseEntity.status(HttpStatus.CREATED).body(with(orderService) { order.toResponse() })
+            // Return all created orders
+            val responses = orders.map { with(orderService) { it.toResponse() } }
+            ResponseEntity.status(HttpStatus.CREATED).body(responses)
         } catch (e: IllegalArgumentException) {
             ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(mapOf("error" to e.message))
         } catch (e: Exception) {
