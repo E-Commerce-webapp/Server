@@ -33,18 +33,11 @@ class UserController(
         @RequestBody req: CreateStoreRequest,
         request: HttpServletRequest
     ): ResponseEntity<String> {
-
-        println(">>> becomeSellerHandle called with body: $req")
-
         val authHeader = request.getHeader("Authorization")
             ?: return ResponseEntity.status(401).body("Missing Authorization header")
-        println(">>> Authorization header: $authHeader")
 
         val token = authHeader.removePrefix("Bearer ").trim()
-        println(">>> Raw token: $token")
-
         val email = jwtUtil.verifyAndGetEmail(token)
-        println(">>> Email from token: $email")
 
         if (email == null) {
             return ResponseEntity.status(401).body("Invalid or expired token")
@@ -52,8 +45,6 @@ class UserController(
 
         val user = userRepository.findByEmail(email)
             .orElseThrow { NotFoundActionException("User not found") }
-
-        println(">>> User found: id=${user.id}, email=${user.email}")
 
         // Check if user already has a store (each seller can only have one store)
         val existingStores = storeRepository.findByOwner(user.id!!)
@@ -70,11 +61,7 @@ class UserController(
             status = StoreStatus.PENDING
         )
         storeRepository.save(store)
-
-        println(">>> Store saved for user ${user.id}")
-
         emailService.sendVerificationEmail(email, token)
-        println(">>> Verification email sent")
 
         return ResponseEntity.ok("Verification email sent.")
     }
@@ -117,27 +104,7 @@ class UserController(
 
         // Generate a new token and send verification email
         val newToken = jwtUtil.generate(email)
-        
-        // Send email directly without the isASeller check
-        try {
-            val verifyUrl = "http://localhost:8080/auth/verify-email/$newToken"
-            val message = org.springframework.mail.SimpleMailMessage().apply {
-                setTo(email)
-                subject = "Verify your email - Resend"
-                text = """
-                    Hi,
-                    
-                    Please verify your email by clicking the link below:
-                    $verifyUrl
-                    
-                    If you did not request this, please ignore this email.
-                """.trimIndent()
-            }
-            emailService.sendEmail(message)
-            println(">>> Verification email resent to $email")
-        } catch (ex: Exception) {
-            ex.printStackTrace()
-        }
+        emailService.resendVerificationEmail(email, newToken)
 
         return ResponseEntity.ok("Verification email resent successfully.")
     }

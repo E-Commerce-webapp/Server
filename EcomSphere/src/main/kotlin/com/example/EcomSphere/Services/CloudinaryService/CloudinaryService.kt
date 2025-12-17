@@ -1,8 +1,10 @@
 package com.example.EcomSphere.Services.CloudinaryService
 
 import com.cloudinary.Cloudinary
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
+import java.util.UUID
 
 data class CloudinaryUploadResult(
     val url: String,
@@ -12,24 +14,38 @@ data class CloudinaryUploadResult(
 
 @Service
 class CloudinaryService(
-    private val cloudinary: Cloudinary
+    private val cloudinary: Cloudinary,
+    @Value("\${cloudinary.use-mock:true}") private val useMock: Boolean
 ) {
     fun uploadImage(file: MultipartFile, folder: String = "ecomsphere"): CloudinaryUploadResult {
         require(!file.isEmpty) { "File is empty" }
 
-        val uploadResult = cloudinary.uploader().upload(
-            file.bytes,
-            mapOf(
-                "folder" to folder,
-                "resource_type" to "image"
+        if (useMock) {
+            val mockId = UUID.randomUUID().toString()
+            return CloudinaryUploadResult(
+                url = "http://mock-cloudinary.local/$folder/$mockId.jpg",
+                secureUrl = "https://mock-cloudinary.local/$folder/$mockId.jpg",
+                publicId = "$folder/$mockId"
             )
-        )
+        }
 
-        return CloudinaryUploadResult(
-            url = uploadResult["url"].toString(),
-            secureUrl = uploadResult["secure_url"].toString(),
-            publicId = uploadResult["public_id"].toString()
-        )
+        try {
+            val uploadResult = cloudinary.uploader().upload(
+                file.bytes,
+                mapOf(
+                    "folder" to folder,
+                    "resource_type" to "image"
+                )
+            )
+
+            return CloudinaryUploadResult(
+                url = uploadResult["url"]?.toString() ?: "",
+                secureUrl = uploadResult["secure_url"]?.toString() ?: "",
+                publicId = uploadResult["public_id"]?.toString() ?: ""
+            )
+        } catch (e: Exception) {
+            throw RuntimeException("Failed to upload image to Cloudinary: ${e.message}", e)
+        }
     }
 
     fun deleteByPublicId(publicId: String): Boolean {

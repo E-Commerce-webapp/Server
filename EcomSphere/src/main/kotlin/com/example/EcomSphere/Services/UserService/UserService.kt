@@ -11,8 +11,6 @@ class UserService(
         val user = userRepository.findById(id)
             .orElseThrow { NotFoundActionException("User with ID $id is not available") }
         
-        println("User data from DB: $user")
-        
         val response = GetUsersResponse(
             firstName = user.firstName,
             lastName = user.lastName,
@@ -25,7 +23,6 @@ class UserService(
             savedPaymentMethod = user.savedPaymentMethod
         )
         
-        println("Sending response: $response")
         return response
     }
 

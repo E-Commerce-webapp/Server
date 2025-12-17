@@ -34,10 +34,7 @@ class OrderController(
     ): ResponseEntity<Any> {
         return try {
             val userId = getUserIdFromToken(authHeader)
-            println(">>> Creating order for userId: $userId")
-            println(">>> Order items: ${request.items.map { "${it.productTitle} (sellerId=${it.sellerId})" }}")
             val order = orderService.createOrder(userId, request)
-            println(">>> Order created with id: ${order.id}")
             
             // Notify sellers about new order
             val buyerName = request.shippingAddress.fullName
@@ -95,21 +92,12 @@ class OrderController(
     ): ResponseEntity<Any> {
         return try {
             val userId = getUserIdFromToken(authHeader)
-            println(">>> Fetching orders for userId: $userId")
             val orders = orderService.getOrdersByUserId(userId)
-            println(">>> Found ${orders.size} orders")
-            orders.forEachIndexed { index, order ->
-                println(">>> Order $index: id=${order.id}, status=${order.status}, items=${order.items.size}")
-            }
             val response = orders.map { with(orderService) { it.toResponse() } }
-            println(">>> Mapped ${response.size} orders to response")
             ResponseEntity.ok(response)
         } catch (e: IllegalArgumentException) {
-            println(">>> IllegalArgumentException: ${e.message}")
             ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(mapOf("error" to e.message))
         } catch (e: Exception) {
-            println(">>> Exception: ${e.javaClass.name}: ${e.message}")
-            e.printStackTrace()
             ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("error" to "Failed to fetch orders: ${e.message}"))
         }
     }
@@ -120,12 +108,7 @@ class OrderController(
     ): ResponseEntity<Any> {
         return try {
             val userId = getUserIdFromToken(authHeader)
-            println(">>> Fetching seller orders for userId: $userId")
             val orders = orderService.getOrdersBySellerId(userId)
-            println(">>> Found ${orders.size} orders for seller")
-            orders.forEach { order ->
-                println(">>> Order ${order.id}: items=${order.items.map { "${it.productTitle} (sellerId=${it.sellerId})" }}")
-            }
             ResponseEntity.ok(orders.map { with(orderService) { it.toResponse() } })
         } catch (e: IllegalArgumentException) {
             ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(mapOf("error" to e.message))
