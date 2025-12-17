@@ -2,6 +2,7 @@ package com.example.EcomSphere.Services.MessageService
 
 import com.example.EcomSphere.MiddleWare.JwtUtil
 import com.example.EcomSphere.Services.UserService.UserRepository
+import com.example.EcomSphere.Services.StoreService.StoreRepository
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -11,7 +12,8 @@ import org.springframework.web.bind.annotation.*
 class MessageController(
     private val messageService: MessageService,
     private val jwtUtil: JwtUtil,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val storeRepository: StoreRepository
 ) {
     private fun getUserIdFromToken(authHeader: String?): String {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -96,6 +98,34 @@ class MessageController(
             ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(mapOf("error" to e.message))
         } catch (e: Exception) {
             ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("error" to "Failed to fetch unread count: ${e.message}"))
+        }
+    }
+
+    @GetMapping("/store/{storeId}/seller")
+    fun getSellerByStoreId(
+        @RequestHeader("Authorization") authHeader: String?,
+        @PathVariable storeId: String
+    ): ResponseEntity<Any> {
+        return try {
+            getUserIdFromToken(authHeader) // Verify user is authenticated
+            val store = storeRepository.findById(storeId)
+                .orElseThrow { IllegalArgumentException("Store not found") }
+            val seller = userRepository.findById(store.owner)
+                .orElseThrow { IllegalArgumentException("Seller not found") }
+            ResponseEntity.ok(mapOf(
+                "sellerId" to seller.id,
+                "sellerName" to "${seller.firstName} ${seller.lastName}",
+                "storeName" to store.name
+            ))
+        } catch (e: IllegalArgumentException) {
+            val message = e.message ?: ""
+            if (message.contains("Authorization") || message.contains("token") || message.contains("User not found")) {
+                ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(mapOf("error" to e.message))
+            } else {
+                ResponseEntity.status(HttpStatus.NOT_FOUND).body(mapOf("error" to e.message))
+            }
+        } catch (e: Exception) {
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("error" to "Failed to fetch seller info: ${e.message}"))
         }
     }
 }
