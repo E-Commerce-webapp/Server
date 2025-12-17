@@ -85,6 +85,17 @@ class UserController(
         return ResponseEntity.ok(updatedUser)
     }
 
+    @PutMapping("/profile")
+    fun updateProfile(
+        @RequestBody request: UpdateProfileRequest,
+        authentication: Authentication
+    ): ResponseEntity<GetUsersResponse> {
+        val principal = authentication.principal as CustomUserPrincipal
+        val userId = principal.id
+        val updatedUser = userService.updateProfile(userId, request)
+        return ResponseEntity.ok(updatedUser)
+    }
+
     @PostMapping("/resend-verification")
     fun resendVerificationEmail(request: HttpServletRequest): ResponseEntity<String> {
         val authHeader = request.getHeader("Authorization")

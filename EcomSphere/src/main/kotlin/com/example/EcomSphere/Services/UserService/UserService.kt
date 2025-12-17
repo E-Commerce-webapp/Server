@@ -62,5 +62,27 @@ class UserService(
             savedPaymentMethod = savedUser.savedPaymentMethod
         )
     }
+
+    fun updateProfile(userId: String, request: UpdateProfileRequest): GetUsersResponse {
+        val user = userRepository.findById(userId)
+            .orElseThrow { NotFoundActionException("User with ID $userId is not available") }
+        
+        request.firstName?.let { user.firstName = it }
+        request.lastName?.let { user.lastName = it }
+        
+        val savedUser = userRepository.save(user)
+        
+        return GetUsersResponse(
+            firstName = savedUser.firstName,
+            lastName = savedUser.lastName,
+            email = savedUser.email,
+            id = savedUser.id,
+            isASeller = savedUser.isASeller!!,
+            emailConfirm = savedUser.emailConfirm!!,
+            address = savedUser.address,
+            savedShippingAddress = savedUser.savedShippingAddress,
+            savedPaymentMethod = savedUser.savedPaymentMethod
+        )
+    }
 }
 
