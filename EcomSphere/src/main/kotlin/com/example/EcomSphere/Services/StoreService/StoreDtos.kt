@@ -28,11 +28,11 @@ data class StoreResponse(
 )
 
 data class UpdateStoreRequest(
-    val name: String?,
-    val phoneNumber: String?,
-    val description: String?,
-    val address: String?,
-    val status: StoreStatus?,
-    val avatar: String?,
-    val cover: String?
+    val name: String? = null,
+    val phoneNumber: String? = null,
+    val description: String? = null,
+    val address: String? = null,
+    val status: StoreStatus? = null,
+    val avatar: String? = null,
+    val cover: String? = null
 )
