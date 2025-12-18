@@ -18,7 +18,9 @@ class StoreService(
             address = this.address!!,
             owner = this.owner,
             phoneNumber = this.phoneNumber,
-            status = this.status
+            status = this.status,
+            avatar = this.avatar,
+            cover = this.cover
         )
 
     fun createStore(req: CreateStoreRequest, owner: String): StoreResponse {
@@ -27,6 +29,12 @@ class StoreService(
 
         if (user.isASeller != true || user.emailConfirm != true) {
             throw ForbiddenActionException("User is not allowed to create a store")
+        }
+
+        // Check if user already has a store (each seller can only have one store)
+        val existingStores = storeRepository.findByOwner(owner)
+        if (existingStores.isNotEmpty()) {
+            throw ForbiddenActionException("You already have a store. Each seller can only have one store.")
         }
 
         val store = Store(
@@ -52,7 +60,9 @@ class StoreService(
                 description = req.description ?: existing.description,
                 address = req.address ?: existing.address,
                 phoneNumber = req.phoneNumber ?: existing.phoneNumber,
-                status = req.status ?: existing.status
+                status = req.status ?: existing.status,
+                avatar = req.avatar ?: existing.avatar,
+                cover = req.cover ?: existing.cover
             )
             val saved = storeRepository.save(updated)
             return saved.toResponse()
@@ -71,17 +81,7 @@ class StoreService(
 
     fun getStores(): List<StoreResponse>{
         val stores = storeRepository.findAll()
-        return stores.map { store ->
-            StoreResponse(
-                id = store.id!!,
-                name = store.name,
-                description = store.description,
-                owner = store.owner,
-                phoneNumber = store.phoneNumber,
-                address = store.address!!,
-                status = store.status
-            )
-        }
+        return stores.map { it.toResponse() }
     }
 
     fun getStoreDetails(id: String): StoreResponse{

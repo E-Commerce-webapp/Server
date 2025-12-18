@@ -35,6 +35,7 @@ class SecurityConfig(
                     // Public product reads (list + details)
                     .requestMatchers(HttpMethod.GET, "/products/external").permitAll()
                     .requestMatchers(HttpMethod.GET, "/products/**").permitAll()
+                    .requestMatchers("/health/**").permitAll()
                     .anyRequest().authenticated()
             }
             .httpBasic { it.disable() }
@@ -61,6 +62,10 @@ class SecurityConfig(
 
     @Bean
     fun cloudinary(): Cloudinary {
+        require(cloudName.isNotBlank()) { "CLOUDINARY_CLOUD_NAME environment variable is required" }
+        require(apiKey.isNotBlank()) { "CLOUDINARY_API_KEY environment variable is required" }
+        require(apiSecret.isNotBlank()) { "CLOUDINARY_API_SECRET environment variable is required" }
+        
         val config = mapOf(
             "cloud_name" to cloudName,
             "api_key" to apiKey,

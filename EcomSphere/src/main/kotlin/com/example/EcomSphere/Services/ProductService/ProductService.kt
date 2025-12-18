@@ -93,8 +93,18 @@ class ProductService(
             throw ForbiddenActionException("You are not allowed to add products to this store")
         }
 
-        val uploaded = image?.takeIf { !it.isEmpty }?.let {
-            cloudinaryService.uploadImage(it, folder = "products/${request.storeId}")
+        if (image == null || image.isEmpty) {
+            throw ForbiddenActionException("Product image is required")
+        }
+
+        val uploaded = try {
+            cloudinaryService.uploadImage(image, folder = "products/${request.storeId}")
+        } catch (e: Exception) {
+            throw ForbiddenActionException("Failed to upload product image: ${e.message}")
+        }
+
+        if (uploaded.secureUrl.isBlank()) {
+            throw ForbiddenActionException("Image upload failed - no URL returned")
         }
 
         val product = Product(
@@ -102,7 +112,7 @@ class ProductService(
             description = request.description,
             price = request.price,
             stock = request.stock,
-            images = uploaded?.secureUrl!!,
+            images = uploaded.secureUrl,
             storeId = request.storeId,
             category = request.category
         )

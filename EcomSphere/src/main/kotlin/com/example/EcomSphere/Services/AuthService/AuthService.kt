@@ -42,7 +42,10 @@ class AuthService(
         if (!bcrypt.matches(req.password, user.passwordHash)) {
             throw ForbiddenActionException("Invalid credentials")
         }
-        return AuthResponse(jwt.generate(user.email))
+        return AuthResponse(
+            token = jwt.generate(user.email),
+            userId = user.id!!
+        )
     }
 
     fun verifyEmail(email: String) {

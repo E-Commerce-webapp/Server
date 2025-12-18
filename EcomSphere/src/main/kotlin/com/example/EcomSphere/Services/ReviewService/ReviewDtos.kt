@@ -26,3 +26,10 @@ data class AverageRatingResponse(
     val averageRating: Double,
     val totalReviews: Int
 )
+
+data class ReviewEligibility(
+    val canReview: Boolean,
+    val reason: String?,
+    val hasReviewed: Boolean,
+    val hasPurchased: Boolean
+)

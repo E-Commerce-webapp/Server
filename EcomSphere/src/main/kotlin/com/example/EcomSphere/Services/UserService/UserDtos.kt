@@ -31,3 +31,8 @@ data class SaveCheckoutInfoRequest(
     val shippingAddress: SaveShippingAddressRequest? = null,
     val paymentMethod: SavePaymentMethodRequest? = null
 )
+
+data class UpdateProfileRequest(
+    val firstName: String? = null,
+    val lastName: String? = null
+)

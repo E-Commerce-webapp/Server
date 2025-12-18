@@ -40,6 +40,17 @@ class ReviewController(
         return ResponseEntity.ok(response)
     }
 
+    @GetMapping("/product/{productId}/eligibility")
+    fun checkReviewEligibility(
+        @PathVariable productId: String,
+        authentication: Authentication
+    ): ResponseEntity<ReviewEligibility> {
+        val principal = authentication.principal as CustomUserPrincipal
+        val userId = principal.id
+        val eligibility = reviewService.canUserReviewProduct(productId, userId)
+        return ResponseEntity.ok(eligibility)
+    }
+
     @GetMapping("/user")
     fun getReviewsByUser(authentication: Authentication): ResponseEntity<List<ReviewResponse>> {
         val principal = authentication.principal as CustomUserPrincipal

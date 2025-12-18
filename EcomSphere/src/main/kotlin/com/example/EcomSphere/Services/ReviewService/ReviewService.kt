@@ -2,12 +2,15 @@ package com.example.EcomSphere.Services.ReviewService
 
 import com.example.EcomSphere.Helper.ForbiddenActionException
 import com.example.EcomSphere.Services.UserService.UserRepository
+import com.example.EcomSphere.Services.OrderService.OrderRepository
+import com.example.EcomSphere.Services.OrderService.OrderStatus
 import org.springframework.stereotype.Service
 
 @Service
 class ReviewService(
     private val reviewRepository: ReviewRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val orderRepository: OrderRepository
 ) {
 
     fun createReview(request: CreateReviewRequest, userId: String): ReviewResponse {
@@ -15,6 +18,16 @@ class ReviewService(
         val existingReview = reviewRepository.findByProductIdAndUserId(request.productId, userId)
         if (existingReview != null) {
             throw ForbiddenActionException("You have already reviewed this product")
+        }
+
+        // Check if user has a delivered order containing this product
+        val deliveredOrders = orderRepository.findByUserIdAndStatus(userId, OrderStatus.DELIVERED)
+        val hasPurchased = deliveredOrders.any { order ->
+            order.items.any { item -> item.productId == request.productId }
+        }
+        
+        if (!hasPurchased) {
+            throw ForbiddenActionException("You can only review products you have purchased and received")
         }
 
         // Validate rating range
@@ -45,6 +58,41 @@ class ReviewService(
         val reviews = reviewRepository.findByProductId(productId)
         if (reviews.isEmpty()) return 0.0
         return reviews.map { it.rating }.average()
+    }
+
+    fun canUserReviewProduct(productId: String, userId: String): ReviewEligibility {
+        // Check if user already reviewed this product
+        val existingReview = reviewRepository.findByProductIdAndUserId(productId, userId)
+        if (existingReview != null) {
+            return ReviewEligibility(
+                canReview = false,
+                reason = "You have already reviewed this product",
+                hasReviewed = true,
+                hasPurchased = true
+            )
+        }
+
+        // Check if user has a delivered order containing this product
+        val deliveredOrders = orderRepository.findByUserIdAndStatus(userId, OrderStatus.DELIVERED)
+        val hasPurchased = deliveredOrders.any { order ->
+            order.items.any { item -> item.productId == productId }
+        }
+
+        if (!hasPurchased) {
+            return ReviewEligibility(
+                canReview = false,
+                reason = "You can only review products you have purchased and received",
+                hasReviewed = false,
+                hasPurchased = false
+            )
+        }
+
+        return ReviewEligibility(
+            canReview = true,
+            reason = null,
+            hasReviewed = false,
+            hasPurchased = true
+        )
     }
 
     fun updateReview(reviewId: String, request: UpdateReviewRequest, userId: String): ReviewResponse {
