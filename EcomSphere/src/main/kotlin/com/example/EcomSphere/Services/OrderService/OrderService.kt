@@ -1,13 +1,15 @@
 package com.example.EcomSphere.Services.OrderService
 
 import com.example.EcomSphere.Services.NotificationService.NotificationService
+import com.example.EcomSphere.Services.ProductService.ProductRepository
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
 @Service
 class OrderService(
     private val orderRepository: OrderRepository,
-    private val notificationService: NotificationService
+    private val notificationService: NotificationService,
+    private val productRepository: ProductRepository
 ) {
     fun createOrder(userId: String, request: CreateOrderRequest): Order {
         // For backward compatibility, create a single order
@@ -145,6 +147,11 @@ class OrderService(
         
         val savedOrder = orderRepository.save(updatedOrder)
         
+        // Deduct stock when order is confirmed
+        if (status == OrderStatus.CONFIRMED) {
+            deductStockForOrder(order)
+        }
+        
         // Send notification to buyer about status change
         notificationService.notifyOrderStatusChange(
             buyerId = order.userId,
@@ -154,6 +161,16 @@ class OrderService(
         )
         
         return savedOrder
+    }
+    
+    private fun deductStockForOrder(order: Order) {
+        order.items.forEach { item ->
+            val product = productRepository.findById(item.productId).orElse(null)
+            if (product != null) {
+                val newStock = maxOf(0, product.stock - item.quantity)
+                productRepository.save(product.copy(stock = newStock))
+            }
+        }
     }
 
     fun cancelOrder(orderId: String, userId: String): Order? {
