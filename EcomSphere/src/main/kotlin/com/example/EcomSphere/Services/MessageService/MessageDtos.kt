@@ -16,6 +16,8 @@ data class MessageResponse(
     val receiverId: String,
     val content: String,
     val isRead: Boolean,
+    val status: MessageStatus,
+    val seenAt: LocalDateTime?,
     val createdAt: LocalDateTime
 )
 

@@ -4,6 +4,12 @@ import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.Document
 import java.time.LocalDateTime
 
+enum class MessageStatus {
+    SENT,
+    DELIVERED,
+    SEEN
+}
+
 @Document("messages")
 data class Message(
     @Id val id: String? = null,
@@ -13,6 +19,8 @@ data class Message(
     val receiverId: String,
     val content: String,
     val isRead: Boolean = false,
+    val status: MessageStatus = MessageStatus.SENT,
+    val seenAt: LocalDateTime? = null,
     val createdAt: LocalDateTime = LocalDateTime.now()
 )
 

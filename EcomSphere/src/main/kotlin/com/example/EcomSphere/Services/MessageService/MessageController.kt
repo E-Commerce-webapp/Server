@@ -101,6 +101,22 @@ class MessageController(
         }
     }
 
+    @PutMapping("/conversations/{conversationId}/seen")
+    fun markMessagesAsSeen(
+        @RequestHeader("Authorization") authHeader: String?,
+        @PathVariable conversationId: String
+    ): ResponseEntity<Any> {
+        return try {
+            val userId = getUserIdFromToken(authHeader)
+            val count = messageService.markMessagesAsSeen(conversationId, userId)
+            ResponseEntity.ok(mapOf("markedAsSeen" to count))
+        } catch (e: IllegalArgumentException) {
+            ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(mapOf("error" to e.message))
+        } catch (e: Exception) {
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("error" to "Failed to mark messages as seen: ${e.message}"))
+        }
+    }
+
     @GetMapping("/store/{storeId}/seller")
     fun getSellerByStoreId(
         @RequestHeader("Authorization") authHeader: String?,

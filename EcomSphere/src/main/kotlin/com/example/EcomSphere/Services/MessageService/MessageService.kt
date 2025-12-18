@@ -120,10 +120,14 @@ class MessageService(
         
         val messages = messageRepository.findByConversationIdOrderByCreatedAtAsc(conversationId)
         
-        // Mark messages as read
+        // Mark messages as seen
         val unreadMessages = messages.filter { it.receiverId == userId && !it.isRead }
         unreadMessages.forEach { msg ->
-            messageRepository.save(msg.copy(isRead = true))
+            messageRepository.save(msg.copy(
+                isRead = true,
+                status = MessageStatus.SEEN,
+                seenAt = LocalDateTime.now()
+            ))
         }
         
         val unreadCount = messageRepository.countByConversationIdAndReceiverIdAndIsReadFalse(
@@ -145,6 +149,21 @@ class MessageService(
         return messageRepository.findByReceiverIdAndIsReadFalse(userId).size
     }
     
+    fun markMessagesAsSeen(conversationId: String, userId: String): Int {
+        val messages = messageRepository.findByConversationIdOrderByCreatedAtAsc(conversationId)
+        val unreadMessages = messages.filter { it.receiverId == userId && !it.isRead }
+        
+        unreadMessages.forEach { msg ->
+            messageRepository.save(msg.copy(
+                isRead = true,
+                status = MessageStatus.SEEN,
+                seenAt = LocalDateTime.now()
+            ))
+        }
+        
+        return unreadMessages.size
+    }
+    
     fun Message.toResponse() = MessageResponse(
         id = id!!,
         conversationId = conversationId,
@@ -153,6 +172,8 @@ class MessageService(
         receiverId = receiverId,
         content = content,
         isRead = isRead,
+        status = status,
+        seenAt = seenAt,
         createdAt = createdAt
     )
     
