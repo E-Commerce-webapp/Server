@@ -22,7 +22,9 @@ data class StoreResponse(
     val owner: String,
     val address: String,
     val id: String,
-    val status: StoreStatus
+    val status: StoreStatus,
+    val avatar: String? = null,
+    val cover: String? = null
 )
 
 data class UpdateStoreRequest(
@@ -30,5 +32,7 @@ data class UpdateStoreRequest(
     val phoneNumber: String?,
     val description: String?,
     val address: String?,
-    val status: StoreStatus?
+    val status: StoreStatus?,
+    val avatar: String?,
+    val cover: String?
 )

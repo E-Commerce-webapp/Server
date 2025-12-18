@@ -18,6 +18,8 @@ data class Store (
     val address: String?,
     val owner: String,
     val phoneNumber: String,
-    val status: StoreStatus = StoreStatus.PENDING
+    val status: StoreStatus = StoreStatus.PENDING,
+    val avatar: String? = null,
+    val cover: String? = null
 ){
 }
